@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `skills` (
   `name`         VARCHAR(200) NOT NULL,
   `description`  TEXT,
   `max_level`    INT DEFAULT 3,
-  `level_labels` JSON DEFAULT '["Ninguno","Básico","Competente","Experto"]',
+  `level_labels` JSON,
   `category_id`  INT,
   `created_at`   DATETIME DEFAULT CURRENT_TIMESTAMP,
   `updated_at`   DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
