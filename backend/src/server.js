@@ -15,6 +15,7 @@ const skillsRoutes        = require('./routes/skills.routes');
 const employeesRoutes     = require('./routes/employees.routes');
 const reportsRoutes       = require('./routes/reports.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const recruitRoutes       = require('./routes/recruit.routes');
 
 const automationService   = require('./services/automation.service');
 
@@ -44,6 +45,7 @@ app.use('/api/skills',        skillsRoutes);
 app.use('/api/employees',     employeesRoutes);
 app.use('/api/reports',       reportsRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/recruit',       recruitRoutes);
 
 // ── Health check ───────────────────────────────────────
 app.get('/api/health', (_req, res) => res.json({ status: 'ok' }));

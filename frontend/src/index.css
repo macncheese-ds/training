@@ -826,6 +826,50 @@ body {
   min-width: 140px;
 }
 
+/* ── Tabs ──────────────────────────────────────────────── */
+.tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+
+.tab {
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+  transition: all var(--transition);
+  white-space: nowrap;
+  margin-bottom: -1px;
+}
+
+.tab:hover { color: var(--text-secondary); }
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+/* ── Page title utility ────────────────────────────────── */
+.page-title {
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--text-primary);
+}
+
+/* ── Table primary column ──────────────────────────────── */
+.primary-col {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
 /* ── Animations ────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }
@@ -841,6 +885,12 @@ body {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.5; }
 }
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
 
 .fade-in { animation: fadeIn 200ms ease; }
 .slide-up { animation: slideUp 250ms ease; }

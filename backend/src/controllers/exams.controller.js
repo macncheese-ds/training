@@ -5,8 +5,12 @@ const skillsService = require('../services/skills.service');
 async function list(_req, res) {
   try {
     const [rows] = await trainingPool.query(
-      `SELECT e.*, (SELECT COUNT(*) FROM exam_questions q WHERE q.exam_id = e.id) AS question_count
-       FROM exams e ORDER BY e.created_at DESC`
+      `SELECT e.*,
+              (SELECT COUNT(*) FROM exam_questions q WHERE q.exam_id = e.id) AS question_count,
+              s.name AS linked_skill_name
+       FROM exams e
+       LEFT JOIN skills s ON s.id = e.linked_skill_id
+       ORDER BY e.created_at DESC`
     );
     res.json(rows);
   } catch (err) { res.status(500).json({ message: 'Error.' }); }
@@ -14,7 +18,11 @@ async function list(_req, res) {
 
 async function getById(req, res) {
   try {
-    const [rows] = await trainingPool.query('SELECT * FROM exams WHERE id = ?', [req.params.id]);
+    const [rows] = await trainingPool.query(
+      `SELECT e.*, s.name AS linked_skill_name
+       FROM exams e LEFT JOIN skills s ON s.id = e.linked_skill_id
+       WHERE e.id = ?`, [req.params.id]
+    );
     if (!rows.length) return res.status(404).json({ message: 'No encontrado.' });
     const exam = rows[0];
     const [questions] = await trainingPool.query(
@@ -27,16 +35,21 @@ async function getById(req, res) {
 
 async function create(req, res) {
   const { title, description, passing_score, time_limit_minutes, max_attempts,
-          cooldown_hours, randomize_questions, randomize_answers, questions } = req.body;
+          cooldown_hours, randomize_questions, randomize_answers,
+          affects_skill_matrix, linked_skill_id, skill_level_granted,
+          questions } = req.body;
   if (!title) return res.status(400).json({ message: 'Título requerido.' });
   try {
     const [result] = await trainingPool.execute(
       `INSERT INTO exams (title, description, passing_score, time_limit_minutes, max_attempts,
-        cooldown_hours, randomize_questions, randomize_answers, created_by)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        cooldown_hours, randomize_questions, randomize_answers,
+        affects_skill_matrix, linked_skill_id, skill_level_granted, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [title, description || null, passing_score || 70, time_limit_minutes || null,
        max_attempts || 3, cooldown_hours || 24, randomize_questions ? 1 : 0,
-       randomize_answers ? 1 : 0, req.user.id]
+       randomize_answers ? 1 : 0,
+       affects_skill_matrix ? 1 : 0, linked_skill_id || null,
+       skill_level_granted || 1, req.user.id]
     );
     const examId = result.insertId;
     if (questions && questions.length) {
@@ -61,14 +74,20 @@ async function create(req, res) {
 async function update(req, res) {
   const { id } = req.params;
   const { title, description, passing_score, time_limit_minutes, max_attempts,
-          cooldown_hours, randomize_questions, randomize_answers, is_active, questions } = req.body;
+          cooldown_hours, randomize_questions, randomize_answers, is_active,
+          affects_skill_matrix, linked_skill_id, skill_level_granted,
+          questions } = req.body;
   try {
     await trainingPool.execute(
       `UPDATE exams SET title=?, description=?, passing_score=?, time_limit_minutes=?,
-       max_attempts=?, cooldown_hours=?, randomize_questions=?, randomize_answers=?, is_active=? WHERE id=?`,
+       max_attempts=?, cooldown_hours=?, randomize_questions=?, randomize_answers=?, is_active=?,
+       affects_skill_matrix=?, linked_skill_id=?, skill_level_granted=?
+       WHERE id=?`,
       [title, description || null, passing_score || 70, time_limit_minutes || null,
        max_attempts || 3, cooldown_hours || 24, randomize_questions ? 1 : 0,
-       randomize_answers ? 1 : 0, is_active !== undefined ? is_active : 1, id]
+       randomize_answers ? 1 : 0, is_active !== undefined ? is_active : 1,
+       affects_skill_matrix ? 1 : 0, linked_skill_id || null,
+       skill_level_granted || 1, id]
     );
     if (questions) {
       await trainingPool.execute('DELETE FROM exam_questions WHERE exam_id = ?', [id]);
@@ -213,8 +232,9 @@ async function submitAttempt(req, res) {
       [score.toFixed(2), passed ? 1 : 0, JSON.stringify(graded), duration, attempt_id]
     );
 
-    // If passed and linked to assignment, trigger skill update
-    if (passed && attempt.assignment_id) {
+    // If passed: trigger skill matrix update when affects_skill_matrix=1
+    // This runs regardless of whether there is an assignment_id
+    if (passed) {
       await skillsService.onExamPassed(attempt.assignment_id, examId, req.user.id, score);
     }
 

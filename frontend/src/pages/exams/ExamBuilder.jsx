@@ -11,9 +11,13 @@ export default function ExamBuilder() {
   const [form, setForm] = useState({
     title: '', description: '', passing_score: 70, time_limit_minutes: '',
     max_attempts: 3, cooldown_hours: 24, randomize_questions: true, randomize_answers: true,
+    affects_skill_matrix: false, linked_skill_id: '', skill_level_granted: 1,
   });
-  const [questions, setQuestions] = useState([]);
-  const [saving, setSaving] = useState(false);
+  const [questions,  setQuestions]  = useState([]);
+  const [skills,     setSkills]     = useState([]);
+  const [saving,     setSaving]     = useState(false);
+
+  useEffect(() => { api.get('/skills').then(r => setSkills(r.data)).catch(() => {}); }, []);
 
   useEffect(() => {
     if (isEdit) {
@@ -24,6 +28,9 @@ export default function ExamBuilder() {
           time_limit_minutes: e.time_limit_minutes || '', max_attempts: e.max_attempts,
           cooldown_hours: e.cooldown_hours, randomize_questions: !!e.randomize_questions,
           randomize_answers: !!e.randomize_answers,
+          affects_skill_matrix: !!e.affects_skill_matrix,
+          linked_skill_id: e.linked_skill_id || '',
+          skill_level_granted: e.skill_level_granted || 1,
         });
         setQuestions(e.questions.map(q => ({
           ...q, options: typeof q.options === 'string' ? JSON.parse(q.options) : (q.options || []),
@@ -114,7 +121,37 @@ export default function ExamBuilder() {
             <label className="form-check"><input type="checkbox" checked={form.randomize_questions} onChange={e => setForm(p => ({ ...p, randomize_questions: e.target.checked }))} /> Orden aleatorio de preguntas</label>
             <label className="form-check"><input type="checkbox" checked={form.randomize_answers} onChange={e => setForm(p => ({ ...p, randomize_answers: e.target.checked }))} /> Orden aleatorio de respuestas</label>
           </div>
+
+          {/* Skill Matrix integration */}
+          <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
+            <label className="form-check" style={{ marginBottom: form.affects_skill_matrix ? 12 : 0 }}>
+              <input type="checkbox" checked={form.affects_skill_matrix}
+                onChange={e => setForm(p => ({ ...p, affects_skill_matrix: e.target.checked, linked_skill_id: e.target.checked ? p.linked_skill_id : '' }))} />
+              <span style={{ fontWeight: 500 }}>Actualiza la Matriz de Habilidades al aprobar</span>
+            </label>
+            {form.affects_skill_matrix && (
+              <div className="form-row" style={{ marginTop: 8 }}>
+                <div className="form-group">
+                  <label className="form-label">Habilidad que se otorga</label>
+                  <select className="form-select" value={form.linked_skill_id}
+                    onChange={e => setForm(p => ({ ...p, linked_skill_id: e.target.value }))}>
+                    <option value="">Seleccionar habilidad...</option>
+                    {skills.map(s => <option key={s.id} value={s.id}>{s.name} — {s.category || 'General'}</option>)}
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label className="form-label">Nivel que se otorga</label>
+                  <input className="form-input" type="number" min={1} max={5} value={form.skill_level_granted}
+                    onChange={e => setForm(p => ({ ...p, skill_level_granted: parseInt(e.target.value) || 1 }))} />
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 4 }}>
+                    Solo sube, nunca baja el nivel actual del empleado.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
+
 
         {/* Questions */}
         <div className="card-title mb-16">Preguntas ({questions.length})</div>

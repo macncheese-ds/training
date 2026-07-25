@@ -1,6 +1,7 @@
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, ClipboardCheck, FileQuestion, Grid3X3,
-         Users, BarChart3, Settings, LogOut, GraduationCap, Bell } from 'lucide-react';
+         Users, BarChart3, Settings, LogOut, GraduationCap, Bell,
+         Briefcase, UserSearch } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import api from '../api/axios';
 
@@ -31,11 +32,12 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       <div className="sidebar-brand">
-        <div className="sidebar-brand-icon">C</div>
-        <h1>Capacitación</h1>
+        <div className="sidebar-brand-icon">H</div>
+        <h1>HR Platform</h1>
       </div>
 
       <nav className="sidebar-nav">
+        {/* General — all users */}
         <div className="sidebar-section">
           <div className="sidebar-section-title">General</div>
           <NavLink to="/" end className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
@@ -49,6 +51,7 @@ export default function Sidebar() {
           </NavLink>
         </div>
 
+        {/* Gestión — manager and above */}
         {isManager && (
           <div className="sidebar-section">
             <div className="sidebar-section-title">Gestión</div>
@@ -59,11 +62,12 @@ export default function Sidebar() {
               <Users /> Empleados
             </NavLink>
             <NavLink to="/skills" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
-              <Grid3X3 /> Matriz
+              <Grid3X3 /> Matriz de Habilidades
             </NavLink>
           </div>
         )}
 
+        {/* Administración — admin only */}
         {isAdmin && (
           <div className="sidebar-section">
             <div className="sidebar-section-title">Administración</div>
@@ -72,6 +76,22 @@ export default function Sidebar() {
             </NavLink>
             <NavLink to="/skills/config" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
               <Settings /> Configuración
+            </NavLink>
+          </div>
+        )}
+
+        {/* Reclutamiento — admin only */}
+        {isAdmin && (
+          <div className="sidebar-section">
+            <div className="sidebar-section-title">Reclutamiento</div>
+            <NavLink to="/recruit" end className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+              <Briefcase /> Resumen
+            </NavLink>
+            <NavLink to="/recruit/vacancies" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+              <BarChart3 /> Vacantes
+            </NavLink>
+            <NavLink to="/recruit/candidates" className={({ isActive }) => `sidebar-link${isActive ? ' active' : ''}`}>
+              <UserSearch /> Candidatos
             </NavLink>
           </div>
         )}
@@ -92,3 +112,4 @@ export default function Sidebar() {
     </aside>
   );
 }
+

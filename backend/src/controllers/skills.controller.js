@@ -1,5 +1,7 @@
 const { trainingPool, credPool } = require('../config/db');
 
+const DEFAULT_LEVEL_LABELS = '["Ninguno","Básico","Competente","Experto"]';
+
 async function list(_req, res) {
   try {
     const [rows] = await trainingPool.query(
@@ -17,7 +19,7 @@ async function create(req, res) {
     const [result] = await trainingPool.execute(
       'INSERT INTO skills (name, description, max_level, level_labels, category_id) VALUES (?, ?, ?, ?, ?)',
       [name, description || null, max_level || 3,
-       level_labels ? JSON.stringify(level_labels) : '["Ninguno","Básico","Competente","Experto"]',
+       level_labels ? JSON.stringify(level_labels) : DEFAULT_LEVEL_LABELS,
        category_id || null]
     );
     res.status(201).json({ id: result.insertId, message: 'Competencia creada.' });

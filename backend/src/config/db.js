@@ -12,7 +12,7 @@ const trainingPool = mysql.createPool({
   charset: 'utf8mb4',
 });
 
-/* ── Credenciales DB pool (read-only) ─────────────────── */
+/* ── Credenciales DB pool (read + write for employee onboarding) ── */
 const credPool = mysql.createPool({
   host:     process.env.CRED_DB_HOST     || 'localhost',
   port:     process.env.DB_PORT          || 3306,

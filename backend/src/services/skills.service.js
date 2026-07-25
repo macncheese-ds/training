@@ -22,11 +22,14 @@ async function onTrainingCompleted(assignment) {
 
 /**
  * Called when an exam is passed.
- * Updates employee_skills based on training_skills mappings that require a minimum score.
+ * Two paths to skill matrix update:
+ *   1. Via training link (existing): exam → training_exams → training_skills
+ *   2. Via direct flag (new): exam.affects_skill_matrix=1 → exam.linked_skill_id
+ * Both paths are non-destructive: skills only go up, never down.
  */
 async function onExamPassed(assignmentId, examId, userId, score) {
   try {
-    // Find trainings linked to this exam
+    // ── Path 1: training → skill mapping ──────────────────────────────────
     const [links] = await trainingPool.query(
       'SELECT training_id FROM training_exams WHERE exam_id = ?', [examId]
     );
@@ -38,6 +41,18 @@ async function onExamPassed(assignmentId, examId, userId, score) {
         if (m.min_exam_score && score >= parseFloat(m.min_exam_score)) {
           await upsertSkill(userId, m.skill_id, m.grants_level, 'exam', assignmentId);
         }
+      }
+    }
+
+    // ── Path 2: exam directly affects skill matrix ─────────────────────────
+    const [examRows] = await trainingPool.query(
+      'SELECT affects_skill_matrix, linked_skill_id, skill_level_granted, passing_score FROM exams WHERE id = ?',
+      [examId]
+    );
+    if (examRows.length && examRows[0].affects_skill_matrix && examRows[0].linked_skill_id) {
+      const e = examRows[0];
+      if (score >= parseFloat(e.passing_score)) {
+        await upsertSkill(userId, e.linked_skill_id, e.skill_level_granted || 1, 'exam', examId);
       }
     }
 

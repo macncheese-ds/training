@@ -111,8 +111,9 @@ export default function EmployeeProfile() {
               <thead><tr><th>Competencia</th><th>Categoría</th><th>Nivel Actual</th><th>Máximo</th><th>Obtenida Via</th><th>Fecha</th></tr></thead>
               <tbody>
                 {profile.skills?.map((s, i) => {
+                  const DEFAULT_LABELS = ['Ninguno', 'Básico', 'Competente', 'Experto'];
                   let levelLabels;
-                  try { levelLabels = typeof s.level_labels === 'string' ? JSON.parse(s.level_labels) : s.level_labels; } catch { levelLabels = []; }
+                  try { levelLabels = s.level_labels ? (typeof s.level_labels === 'string' ? JSON.parse(s.level_labels) : s.level_labels) : DEFAULT_LABELS; } catch { levelLabels = DEFAULT_LABELS; }
                   const levelName = levelLabels?.[s.current_level] || `Nivel ${s.current_level}`;
                   return (
                     <tr key={i}>

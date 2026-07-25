@@ -28,10 +28,14 @@ export default function SkillMatrix() {
     }).catch(() => setLoading(false));
   }, [filterArea, filterRole]);
 
+  const DEFAULT_LABELS = ['Ninguno', 'Básico', 'Competente', 'Experto'];
+
   const getLevelLabel = (skill, level) => {
     if (level === 0) return '—';
     try {
-      const labels = typeof skill.level_labels === 'string' ? JSON.parse(skill.level_labels) : skill.level_labels;
+      const labels = skill.level_labels
+        ? (typeof skill.level_labels === 'string' ? JSON.parse(skill.level_labels) : skill.level_labels)
+        : DEFAULT_LABELS;
       return labels?.[level] || `L${level}`;
     } catch { return `L${level}`; }
   };
